@@ -1,0 +1,39 @@
+import os, json, httpx
+from dotenv import load_dotenv
+
+load_dotenv()
+
+ELEVEN_API = os.getenv("ELEVENLABS_API_KEY")
+ELEVEN_VOICE = os.getenv("ELEVENLABS_VOICE_ID", "21m00Tcm4TlvDq8ikWAM")
+
+if not ELEVEN_API:
+    raise RuntimeError("Missing ELEVENLABS_API_KEY in .env")
+
+def tts_stream(text: str):
+    """
+    Stream audio bytes from ElevenLabs.
+    """
+    url = 
+f"https://api.elevenlabs.io/v1/text-to-speech/{ELEVEN_VOICE}/stream"
+    headers = {
+        "xi-api-key": ELEVEN_API,
+        "Authorization": f"Bearer {ELEVEN_API}",
+        "accept": "audio/mpeg",
+        "content-type": "application/json"
+    }
+    payload = {"text": text, "model_id": "eleven_turbo_v2_5"}
+
+    def gen():
+        with httpx.stream("POST", url, headers=headers, json=payload, 
+timeout=60) as resp:
+            if resp.status_code != 200:
+                body = resp.read()
+                try:
+                    err = json.loads(body.decode("utf-8", "ignore"))
+                except Exception:
+                    err = {"raw": body[:300].decode("utf-8", "ignore")}
+                raise RuntimeError(f"ElevenLabs TTS error 
+{resp.status_code}: {err}")
+            for chunk in resp.iter_bytes():
+                if chunk:
+                    yield chunk

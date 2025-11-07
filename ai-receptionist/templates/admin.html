@@ -1,0 +1,44 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Appointments</title>
+  <style>
+    body{font-family:system-ui, -apple-system, Segoe UI, Roboto; 
+margin:24px}
+    table{border-collapse:collapse;width:100%}
+    th,td{border:1px solid #ddd;padding:8px}
+    th{background:#f7f7f7;text-align:left}
+    .row{margin:12px 0}
+    .muted{color:#666}
+    a.btn{display:inline-block;padding:8px 12px;border:1px solid 
+#ccc;border-radius:6px;text-decoration:none}
+  </style>
+</head>
+<body>
+  <h1>Appointments ({{ rows|length }})</h1>
+  <div class="row">
+    <a class="btn" href="/calendar.ics" target="_blank">Download ICS</a>
+    <span class="muted">| {{ business }}</span>
+  </div>
+  <table>
+    <tr>
+      <th>ID</th><th>Caller</th><th>Name</th><th>Service</th>
+      <th>Reason</th><th>Start</th><th>End</th><th>Created</th>
+    </tr>
+    {% for r in rows %}
+    <tr>
+      <td>{{ r[0] }}</td>
+      <td>{{ r[1] or "" }}</td>
+      <td>{{ r[2] or "" }}</td>
+      <td>{{ r[3] or "" }}</td>
+      <td>{{ r[4] or "" }}</td>
+      <td>{{ r[5] or "" }}</td>
+      <td>{{ r[6] or "" }}</td>
+      <td class="muted">{{ r[7] or "" }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</body>
+</html>
+
