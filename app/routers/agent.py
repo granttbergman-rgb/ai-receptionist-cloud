@@ -1,3 +1,13 @@
+import os
+
+ELEVEN_API_KEY = os.getenv("ELEVENLABS_API_KEY")
+ELEVEN_VOICE_ID = os.getenv("ELEVENLABS_VOICE_ID", "EXAVITQu4vr4xnSDxMaL")
+ELEVEN_MODEL = os.getenv("ELEVENLABS_MODEL_ID", "eleven_turbo_v2")
+ELEVEN_OUTPUT_FORMAT = os.getenv("ELEVENLABS_OUTPUT_FORMAT", "mp3")
+from .agent_env import (
+    ELEVEN_API_KEY, ELEVEN_VOICE_ID, ELEVEN_MODEL, ELEVEN_OUTPUT_FORMAT
+)
+
 from fastapi import APIRouter, Body
 from pydantic import BaseModel
 from datetime import datetime, timedelta
