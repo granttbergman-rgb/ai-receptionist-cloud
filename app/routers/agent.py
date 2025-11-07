@@ -8,43 +8,55 @@ from app.agent_env import (
     ELEVEN_API_KEY, ELEVEN_VOICE_ID, ELEVEN_MODEL, ELEVEN_OUTPUT_FORMAT
 )
 
-from fastapi import APIRouter, Body
-from pydantic import BaseModel
 from datetime import datetime, timedelta
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel, Field, validator
+import pytz
 
-router = APIRouter(prefix="/agent", tags=["agent"])
+router = APIRouter()
 
-class AvailabilityRequest(BaseModel):
-    date: str
-    service: str
+ALLOWED = {"consultation","follow-up","onboarding","demo call"}
+
+class AvailabilityIn(BaseModel):
+    service: str = Field(...)
+    date: str = Field(..., description="YYYY-MM-DD")
+    duration_min: int = Field(30, ge=5, le=180)
+
+    @validator("service", pre=True)
+    def norm_service(cls, v):
+        s = str(v).strip().lower()
+        if s in {"consulatation","consult","consulttion"}:
+            s = "consultation"
+        if s not in ALLOWED:
+            raise ValueError("invalid_service")
+        return s
+
+    @validator("date")
+    def check_date(cls, v):
+        # Expect exact YYYY-MM-DD
+        try:
+            datetime.fromisoformat(v)  # raises on junk like 'string'
+        except Exception:
+            raise ValueError("invalid_date_format")
+        return v
 
 @router.post("/check_availability")
-def check_availability(payload: AvailabilityRequest):
-    base = datetime.fromisoformat(payload.date).replace(hour=9, minute=0, 
-second=0, microsecond=0)
-    slots = []
-    for i in range(0, 8*2):  # 9–17, every 30 minutes
-        t = base + timedelta(minutes=30*i)
-        if t.hour == 12:  # skip lunch
-            continue
-        slots.append({"start": t.isoformat(), "end": (t + 
-timedelta(minutes=30)).isoformat()})
-    return {"service": payload.service, "date": payload.date, "slots": 
-slots}
-
-@router.post("/handle_incoming")
-def handle_incoming(from_number: str = Body(None), to_number: str = 
-Body(None), speech_text: str = Body(None)):
-    return {"message": "Hello from the cloud receptionist.", "caller": 
-from_number, "heard": speech_text}
-
-@router.post("/status_callback")
-def status_callback():
-    return {"ok": True}
-
-@router.post("/current_date")
-def get_current_date():
+def check_availability(payload: AvailabilityIn):
     tz = pytz.timezone("America/Chicago")
-    now = datetime.now(tz)
-    return {"current_date": now.strftime("%Y-%m-%d")}
+    d = datetime.fromisoformat(payload.date).date()
+    base = tz.localize(datetime.combine(d, time(9, 0)))
+    close = tz.localize(datetime.combine(d, time(17, 0)))
+
+    slot = timedelta(minutes=payload.duration_min)
+    slots = []
+    t = base
+    # TODO: subtract existing appts here if you have them
+    while t + slot <= close:
+        # return ISO without timezone if that's what your client expects
+        start_iso = t.replace(tzinfo=None).isoformat(timespec="seconds")
+        end_iso = (t + slot).replace(tzinfo=None).isoformat(timespec="seconds")
+        slots.append({"start": start_iso, "end": end_iso})
+        t += slot
+
+    return {"date": payload.date, "service": payload.service, "slots": slots}
 
