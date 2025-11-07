@@ -1,6 +1,9 @@
 from fastapi import FastAPI
+from app.routers import agent
 
-app = FastAPI(title="Cloud Test")
+app = FastAPI(title="AI Receptionist Cloud")
+
+app.include_router(agent.router)
 
 @app.get("/")
 def root():
