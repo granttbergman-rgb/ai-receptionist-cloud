@@ -1,17 +1,22 @@
 import os
 
-ELEVEN_API_KEY = os.getenv("ELEVENLABS_API_KEY")
-ELEVEN_VOICE_ID = os.getenv("ELEVENLABS_VOICE_ID", "EXAVITQu4vr4xnSDxMaL")
-ELEVEN_MODEL = os.getenv("ELEVENLABS_MODEL_ID", "eleven_turbo_v2")
-ELEVEN_OUTPUT_FORMAT = os.getenv("ELEVENLABS_OUTPUT_FORMAT", "mp3")
+# drop the duplicate manual getenvs if you’re importing from app.agent_env already
+# import os
+# ELEVEN_API_KEY = os.getenv("ELEVENLABS_API_KEY")
+# ELEVEN_VOICE_ID = os.getenv("ELEVENLABS_VOICE_ID", "EXAVITQu4vr4xnSDxMaL")
+# ELEVEN_MODEL = os.getenv("ELEVENLABS_MODEL_ID", "eleven_turbo_v2")
+# ELEVEN_OUTPUT_FORMAT = os.getenv("ELEVENLABS_OUTPUT_FORMAT", "mp3")
+
 from app.agent_env import (
     ELEVEN_API_KEY, ELEVEN_VOICE_ID, ELEVEN_MODEL, ELEVEN_OUTPUT_FORMAT
 )
 
-from datetime import datetime, timedelta
+from datetime import datetime, time, timedelta   # ← add time
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field, validator
+# EITHER keep pytz and add it to requirements.txt, OR use zoneinfo
 import pytz
+from zoneinfo import ZoneInfo
 
 router = APIRouter()
 

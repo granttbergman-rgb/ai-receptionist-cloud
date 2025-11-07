@@ -3,8 +3,8 @@ from app.routers import agent
 
 app = FastAPI(title="AI Receptionist Cloud")
 
-app.include_router(agent.router)
-
+# Mount under /agent so your /agent/check_availability URL actually exists
+app.include_router(agent.router, prefix="/agent", tags=["agent"])
 @app.get("/")
 def root():
     return {"ok": True}
