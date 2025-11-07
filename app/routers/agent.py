@@ -65,3 +65,50 @@ def check_availability(payload: AvailabilityIn):
 
     return {"date": payload.date, "service": payload.service, "slots": slots}
 
+@router.post("/create_appointment")
+def create_appointment(payload: dict):
+    import sqlite3
+    from datetime import datetime
+
+    try:
+        conn = sqlite3.connect("reception.db")
+        c = conn.cursor()
+        c.execute("""
+            CREATE TABLE IF NOT EXISTS appointments (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                service TEXT,
+                customer_name TEXT,
+                customer_phone TEXT,
+                start TEXT,
+                end TEXT
+            )
+        """)
+
+        start = payload["start"]
+        end = payload["end"]
+
+        # Check format sanity
+        datetime.fromisoformat(start)
+        datetime.fromisoformat(end)
+
+        # Check for conflicts
+        c.execute("SELECT * FROM appointments WHERE start=? OR end=?", 
+(start, end))
+        if c.fetchone():
+            raise HTTPException(status_code=409, detail="Slot already booked")
+
+        c.execute("""
+            INSERT INTO appointments (service, customer_name, 
+customer_phone, start, end)
+            VALUES (?, ?, ?, ?, ?)
+        """, (payload["service"], payload["customer_name"], 
+payload["customer_phone"], start, end))
+        conn.commit()
+        conn.close()
+
+        return {"status": "ok", "message": "Appointment booked", "start": 
+start, "end": end}
+
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
