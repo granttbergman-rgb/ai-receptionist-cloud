@@ -42,3 +42,9 @@ from_number, "heard": speech_text}
 def status_callback():
     return {"ok": True}
 
+@router.post("/current_date")
+def get_current_date():
+    tz = pytz.timezone("America/Chicago")
+    now = datetime.now(tz)
+    return {"current_date": now.strftime("%Y-%m-%d")}
+
